@@ -1,0 +1,45 @@
+# Versão do Docker Compose a ser utilizada.
+version: '3.8'
+
+# Definição dos serviços (containers) que compõem a aplicação.
+services:
+  # Serviço para a base de dados MySQL.
+  db:
+    image: mysql:8.0
+    container_name: finanquest-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: finanquest
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # Mapeia a porta 3306 do container para a porta 3306 da sua máquina.
+      - "3306:3306"
+    volumes:
+      # Cria um volume para persistir os dados da base de dados, mesmo que o container seja removido.
+      - finanquest-db-data:/var/lib/mysql
+
+  # Serviço para a aplicação Spring Boot (backend).
+  app:
+    # Constrói a imagem a partir do Dockerfile na pasta atual.
+    build: .
+    container_name: finanquest-app
+    restart: on-failure
+    depends_on:
+      # Garante que o container da base de dados seja iniciado antes da aplicação.
+      - db
+    ports:
+      # Mapeia a porta 8080 do container para a porta 8080 da sua máquina.
+      - "8080:8080"
+    environment:
+      # Configura as variáveis de ambiente que a aplicação Spring usará para se conectar à base de dados.
+      # Note que o 'host' é o nome do serviço da base de dados ('db').
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/finanquest?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      # Mude para 'create' se precisar de recriar as tabelas.
+
+# Definição dos volumes nomeados para persistência de dados.
+volumes:
+  finanquest-db-data:
