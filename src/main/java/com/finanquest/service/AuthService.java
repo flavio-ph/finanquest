@@ -1,6 +1,6 @@
 package com.finanquest.service;
 
-import com.finanquest.config.JwtService;
+import com.finanquest.security.JwtService;
 import com.finanquest.dto.AuthResponseDTO;
 import com.finanquest.dto.LoginRequestDTO;
 import com.finanquest.dto.UserProfileResponseDTO;

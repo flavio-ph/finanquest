@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users/{userId}/transactions")
 @RequiredArgsConstructor
-public class TrasansactionController {
+public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
@@ -45,8 +45,8 @@ public class TrasansactionController {
             @PathVariable Long userId,
             @PathVariable Long transactionId,
             @Valid @RequestBody TransactionRequestDTO transactionDTO) {
-        // No futuro, a lógica de segurança verificará se o 'userId' tem permissão para alterar a 'transactionId'.
-        Transaction updatedTransaction = transactionService.updateTransaction(transactionId, transactionDTO);
+
+        Transaction updatedTransaction = transactionService.updateTransaction(transactionId, transactionDTO, userId);
         return ResponseEntity.ok(mapToResponseDTO(updatedTransaction));
     }
 
@@ -54,10 +54,10 @@ public class TrasansactionController {
     public ResponseEntity<Void> deleteTransaction(
             @PathVariable Long userId,
             @PathVariable Long transactionId) {
-        transactionService.deleteTransaction(transactionId);
+
+        transactionService.deleteTransaction(transactionId, userId);
         return ResponseEntity.noContent().build();
     }
-
     private TransactionResponseDTO mapToResponseDTO(Transaction transaction) {
         return new TransactionResponseDTO(
                 transaction.getId(),

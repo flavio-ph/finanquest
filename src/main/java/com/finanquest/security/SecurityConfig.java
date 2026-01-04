@@ -1,55 +1,51 @@
-package com.finanquest.config;
+package com.finanquest.security;
 
-import com.finanquest.repository.UserRepository;
+import com.finanquest.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; // Adicionado
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Permite usar @PreAuthorize nos controllers futuramente
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserRepository userRepository;
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final UserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Correção: O caminho completo para os endpoints de autenticação deve ser liberado.
-                        .requestMatchers("/api/auth/**").permitAll()
-                        // Todas as outras requisições exigirão autenticação.
+                        .requestMatchers("/api/auth/**", "/h2-console/**", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()
-                );
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> (org.springframework.security.core.userdetails.UserDetails) userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilizador não encontrado"));
-    }
-
-    @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

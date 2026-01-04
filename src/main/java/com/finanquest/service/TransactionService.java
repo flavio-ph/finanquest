@@ -7,6 +7,7 @@ import com.finanquest.exception.ResourceNotFoundException;
 import com.finanquest.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,30 +33,26 @@ public class TransactionService {
         transaction.setUser(user);
 
         Transaction savedTransaction = transactionRepository.save(transaction);
-
-        // Após salvar a transação, delega a lógica de gamificação para o serviço responsável.
         gamificationService.processNewTransaction(savedTransaction);
 
         return savedTransaction;
     }
 
-
     public List<Transaction> findTransactionsByUserId(Long userId) {
-        // A verificação da existência do utilizador já é tratada dentro do userService.findById()
         userService.findById(userId);
         return transactionRepository.findByUserId(userId);
     }
 
     @Transactional
-    public Transaction updateTransaction(Long transactionId, TransactionRequestDTO transactionDTO) {
-        Optional<Transaction> optionalTransaction = transactionRepository.findById(transactionId);
+    public Transaction updateTransaction(Long transactionId, TransactionRequestDTO transactionDTO, Long userId) {
+        Transaction existingTransaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transação não encontrada"));
 
-        if (optionalTransaction.isEmpty()) {
-            System.out.println("⚠️ Transação não encontrada com o id: " + transactionId);
-            return null; // ou apenas retorne null temporariamente
+        // Verificação de Segurança
+        if (!existingTransaction.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Você não tem permissão para alterar esta transação.");
         }
 
-        Transaction existingTransaction = optionalTransaction.get();
         existingTransaction.setDescriptions(transactionDTO.description());
         existingTransaction.setAmount(transactionDTO.amount());
         existingTransaction.setType(transactionDTO.type());
@@ -65,13 +62,15 @@ public class TransactionService {
     }
 
     @Transactional
-    public void deleteTransaction(Long transactionId) {
-        if (!transactionRepository.existsById(transactionId)) {
-            System.out.println("⚠️ Transação não encontrada com o id: " + transactionId);
-            return; // apenas sai do método, sem lançar erro
+    public void deleteTransaction(Long transactionId, Long userId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transação não encontrada"));
+
+        // Verificação de Segurança
+        if (!transaction.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Você não tem permissão para remover esta transação.");
         }
 
-        transactionRepository.deleteById(transactionId);
+        transactionRepository.delete(transaction);
     }
-
 }
