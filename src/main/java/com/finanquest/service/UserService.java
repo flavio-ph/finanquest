@@ -3,6 +3,7 @@ package com.finanquest.service;
 import com.finanquest.entity.User;
 import com.finanquest.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public User registerUser(User user) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
@@ -39,7 +41,10 @@ public class UserService {
 
         existingUser.setName(dto.getName());
         existingUser.setEmail(dto.getEmail());
-        existingUser.setPassword(dto.getPassword());
+
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            existingUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
 
         return userRepository.save(existingUser);
     }
