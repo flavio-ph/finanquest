@@ -23,7 +23,7 @@ public class Achievement {
     private String name;
 
     @Column(nullable = false)
-    private String description; // Corrigido de "descriptions"
+    private String description;
 
     @Column(name = "unlock_condition")
     private String unlockCondition;
