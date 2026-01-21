@@ -63,7 +63,8 @@ public class AuthService {
                 user.getName(),
                 user.getEmail(),
                 user.getLevel(),
-                user.getExperiencePoints()
+                user.getExperiencePoints(),
+                user.getProfilePicture()
         );
 
         return new AuthResponseDTO(jwtToken, userProfile);

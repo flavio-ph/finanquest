@@ -52,4 +52,10 @@ public class UserController {
         userService.grantExperiencePoints(user, points);
         return ResponseEntity.ok(user);
     }
+
+    @PutMapping("/{id}/photo")
+    public ResponseEntity<Void> updatePhoto(@PathVariable Long id, @RequestBody String base64Photo) {
+        userService.updatePhoto(id, base64Photo);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -7,7 +7,8 @@ public record UserProfileResponseDTO(
         String name,
         String email,
         int level,
-        long experiencePoints
+        long experiencePoints,
+        String profilePicture
 ) {
 
 

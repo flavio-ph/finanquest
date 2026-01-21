@@ -30,7 +30,6 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequestDTO) {
 
         try {
-            // REMOVIDO: String.valueOf(...) que quebrava o JSON
             return ResponseEntity.ok(authService.login(loginRequestDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());

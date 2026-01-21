@@ -21,9 +21,9 @@ public class UserService {
             throw new RuntimeException("Esse email já está em uso.");
         }
 
-        // --- ADICIONE ESTA LINHA OBRIGATÓRIA ---
+        // --- CORREÇÃO: CRIPTOGRAFAR ANTES DE SALVAR ---
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        // ---------------------------------------
+        // ----------------------------------------------
 
         user.setLevel(1);
         user.setExperiencePoints(0L);
@@ -77,6 +77,12 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public void updatePhoto(Long id, String base64Photo) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
+        user.setProfilePicture(base64Photo);
+        userRepository.save(user);
+    }
 
 }
