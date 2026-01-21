@@ -16,10 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-<<<<<<< HEAD:src/main/java/com/finanquest/config/SecurityConfig.java
-=======
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
->>>>>>> 68cbc396a23e0d31e3ac6ca74566986b9baaaff0:src/main/java/com/finanquest/security/SecurityConfig.java
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -39,16 +36,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-<<<<<<< HEAD:src/main/java/com/finanquest/config/SecurityConfig.java
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
-=======
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // <--- ESTA LINHA É CRÍTICA
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**", "/swagger-ui/**").permitAll()
->>>>>>> 68cbc396a23e0d31e3ac6ca74566986b9baaaff0:src/main/java/com/finanquest/security/SecurityConfig.java
+                        .requestMatchers("/api/auth/**", "/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -58,29 +48,12 @@ public class SecurityConfig {
         return http.build();
     }
 
-<<<<<<< HEAD:src/main/java/com/finanquest/config/SecurityConfig.java
-    // 2. ADICIONADO: Define quem pode acessar (Todo mundo '*')
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*")); // Permite Frontend Web e Mobile
+        configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-=======
-    // Configuração para permitir o Expo/Telemóvel
->>>>>>> 68cbc396a23e0d31e3ac6ca74566986b9baaaff0:src/main/java/com/finanquest/security/SecurityConfig.java
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*")); // Permite tudo
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
