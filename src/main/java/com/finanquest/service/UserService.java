@@ -21,6 +21,10 @@ public class UserService {
             throw new RuntimeException("Esse email já está em uso.");
         }
 
+        // --- ADICIONE ESTA LINHA OBRIGATÓRIA ---
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // ---------------------------------------
+
         user.setLevel(1);
         user.setExperiencePoints(0L);
 
