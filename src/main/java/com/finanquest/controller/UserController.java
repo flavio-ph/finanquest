@@ -1,5 +1,6 @@
 package com.finanquest.controller;
 
+import com.finanquest.entity.Achievement;
 import com.finanquest.entity.User;
 import com.finanquest.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -57,5 +58,10 @@ public class UserController {
     public ResponseEntity<Void> updatePhoto(@PathVariable Long id, @RequestBody String base64Photo) {
         userService.updatePhoto(id, base64Photo);
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/{id}/achievements")
+    public ResponseEntity<List<Achievement>> getUserAchievements(@PathVariable Long id) {
+        List<Achievement> achievements = userService.getUserAchievements(id);
+        return ResponseEntity.ok(achievements);
     }
 }

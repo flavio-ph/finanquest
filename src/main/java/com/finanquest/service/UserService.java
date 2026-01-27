@@ -1,11 +1,14 @@
 package com.finanquest.service;
 
+import com.finanquest.entity.Achievement;
 import com.finanquest.entity.User;
+import com.finanquest.exception.ResourceNotFoundException;
 import com.finanquest.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,6 +86,14 @@ public class UserService {
 
         user.setProfilePicture(base64Photo);
         userRepository.save(user);
+    }
+
+    public List<Achievement> getUserAchievements(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado id: " + userId));
+
+
+        return new ArrayList<>(user.getAchievements());
     }
 
 }
