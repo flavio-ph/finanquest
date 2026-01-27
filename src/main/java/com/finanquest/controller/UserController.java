@@ -1,5 +1,6 @@
 package com.finanquest.controller;
 
+import com.finanquest.dto.UserProfileResponseDTO;
 import com.finanquest.entity.Achievement;
 import com.finanquest.entity.User;
 import com.finanquest.service.UserService;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -64,4 +65,6 @@ public class UserController {
         List<Achievement> achievements = userService.getUserAchievements(id);
         return ResponseEntity.ok(achievements);
     }
+
+
 }
