@@ -5,6 +5,8 @@ import com.finanquest.entity.User;
 import com.finanquest.exception.ResourceNotFoundException;
 import com.finanquest.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // Importação Necessária
+import org.springframework.data.domain.Pageable; // Importação Necessária
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +26,7 @@ public class UserService {
             throw new RuntimeException("Esse email já está em uso.");
         }
 
-        // --- CORREÇÃO: CRIPTOGRAFAR ANTES DE SALVAR ---
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        // ----------------------------------------------
-
         user.setLevel(1);
         user.setExperiencePoints(0L);
 
@@ -38,9 +37,13 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    // --- CORREÇÃO CRÍTICA DE PERFORMANCE ---
+    // Substituímos findAllUsers() e getAllUsers() por este método paginado
+    public Page<User> getAllUsers(Pageable pageable) {
+        // O repositório JpaRepository já tem o método findAll(Pageable) nativo
+        return userRepository.findAll(pageable);
     }
+    // ---------------------------------------
 
     public User updateUser(Long id, User dto) {
         User existingUser = userRepository.findById(id)
@@ -60,7 +63,6 @@ public class UserService {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("Usuário não encontrado.");
         }
-
         userRepository.deleteById(id);
     }
 
@@ -72,18 +74,12 @@ public class UserService {
         if (newLevel > user.getLevel()) {
             user.setLevel(newLevel);
         }
-
         userRepository.save(user);
-    }
-
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
     }
 
     public void updatePhoto(Long id, String base64Photo) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
         user.setProfilePicture(base64Photo);
         userRepository.save(user);
     }
@@ -91,9 +87,6 @@ public class UserService {
     public List<Achievement> getUserAchievements(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado id: " + userId));
-
-
-        return new ArrayList<>(user.getAchievements());
+        return new ArrayList<>(user.getUnlockedAchievements());
     }
-
 }

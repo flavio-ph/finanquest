@@ -5,27 +5,26 @@ import com.finanquest.entity.Transaction;
 import com.finanquest.entity.User;
 import com.finanquest.exception.ResourceNotFoundException;
 import com.finanquest.repository.TransactionRepository;
-import com.finanquest.repository.UserRepository; // Importar UserRepository
+import com.finanquest.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final UserRepository userRepository; // Injetamos o repositório diretamente
+    private final UserRepository userRepository;
     private final GamificationService gamificationService;
-    private final UserService userService; // Podemos manter para métodos auxiliares se necessário
+    private final UserService userService;
 
     @Transactional
     public Transaction createTransaction(TransactionRequestDTO transactionDTO, String userEmail) {
-        // 1. Buscamos o utilizador real (User), não um Optional
+        // 1. Buscamos o utilizador real (User)
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilizador não encontrado com email: " + userEmail));
 
@@ -35,21 +34,24 @@ public class TransactionService {
         transaction.setType(transactionDTO.type());
         transaction.setDate(transactionDTO.date());
 
-        // 2. Agora passamos o objeto User real.
-        // Como apagou o método errado na entidade, o Lombok vai usar o correto.
+        // 2. Associamos o utilizador à transação
         transaction.setUser(user);
 
         Transaction savedTransaction = transactionRepository.save(transaction);
+
+        // 3. Processamos a gamificação
         gamificationService.processNewTransaction(savedTransaction);
 
         return savedTransaction;
     }
 
-    public List<Transaction> findTransactionsByUserEmail(String userEmail) {
+    // CORREÇÃO: Adicionado o parâmetro 'Pageable pageable'
+    public Page<Transaction> findTransactionsByUserEmail(String userEmail, Pageable pageable) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilizador não encontrado."));
 
-        return transactionRepository.findByUserId(user.getId());
+        // Repassamos o pageable para o repositório
+        return transactionRepository.findByUserId(user.getId(), pageable);
     }
 
     @Transactional
@@ -57,7 +59,7 @@ public class TransactionService {
         Transaction existingTransaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transação não encontrada"));
 
-        // Validação de Segurança: O email do dono da transação bate com o email do token?
+        // Verificação de Segurança
         if (!existingTransaction.getUser().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("Você não tem permissão para alterar esta transação.");
         }
@@ -75,6 +77,7 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transação não encontrada"));
 
+        // Verificação de Segurança
         if (!transaction.getUser().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("Você não tem permissão para remover esta transação.");
         }

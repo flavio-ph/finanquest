@@ -28,7 +28,6 @@ public class GamificationService {
                                List<AchievementStrategy> strategyList) {
         this.userService = userService;
         this.achievementRepository = achievementRepository;
-        // Cria um mapa para acesso rápido: "NOME_DA_CONDICAO" -> Instância da Estratégia
         this.strategies = strategyList.stream()
                 .collect(Collectors.toMap(AchievementStrategy::getConditionName, Function.identity()));
     }

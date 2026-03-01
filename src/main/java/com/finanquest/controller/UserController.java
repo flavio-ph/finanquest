@@ -1,10 +1,13 @@
 package com.finanquest.controller;
 
-import com.finanquest.dto.UserProfileResponseDTO;
 import com.finanquest.entity.Achievement;
 import com.finanquest.entity.User;
 import com.finanquest.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // Importar
+import org.springframework.data.domain.Pageable; // Importar
+import org.springframework.data.domain.Sort; // Importar
+import org.springframework.data.web.PageableDefault; // Importar
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,11 +26,15 @@ public class UserController {
         return ResponseEntity.ok(newUser);
     }
 
+    // --- CORREÇÃO DE PAGINAÇÃO ---
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
+    public ResponseEntity<Page<User>> getAllUsers(
+            @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        Page<User> users = userService.getAllUsers(pageable);
         return ResponseEntity.ok(users);
     }
+    // -----------------------------
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
@@ -60,11 +67,10 @@ public class UserController {
         userService.updatePhoto(id, base64Photo);
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("/{id}/achievements")
     public ResponseEntity<List<Achievement>> getUserAchievements(@PathVariable Long id) {
         List<Achievement> achievements = userService.getUserAchievements(id);
         return ResponseEntity.ok(achievements);
     }
-
-
 }

@@ -4,9 +4,9 @@ import com.finanquest.dto.ChallengeRequestDTO;
 import com.finanquest.entity.Challenge;
 import com.finanquest.repository.ChallengeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // Importar
+import org.springframework.data.domain.Pageable; // Importar
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class ChallengeService {
         return challengeRepository.save(challenge);
     }
 
-    public List<Challenge> getAllChallenges() {
-        return challengeRepository.findAll();
+    public Page<Challenge> getAllChallenges(Pageable pageable) {
+        return challengeRepository.findAll(pageable);
     }
 }

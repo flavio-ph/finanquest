@@ -1,14 +1,15 @@
 package com.finanquest.repository;
 
 import com.finanquest.entity.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.util.List;
 
-public interface TransactionRepository extends JpaRepository<Transaction,Long> {
+@Repository
+public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    List<Transaction> findByUserId(Long userid);
-
-    List<Transaction> findByUserIdAndDateBetween(Integer userId, LocalDate startDate, LocalDate endDate);
+    // Altera de List<Transaction> para Page<Transaction> e recebe Pageable
+    Page<Transaction> findByUserId(Long userId, Pageable pageable);
 }

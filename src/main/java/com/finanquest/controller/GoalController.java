@@ -6,6 +6,10 @@ import com.finanquest.entity.Goal;
 import com.finanquest.service.GoalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,9 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/goals")
@@ -34,27 +36,49 @@ public class GoalController {
         return new ResponseEntity<>(mapToResponseDTO(goal), HttpStatus.CREATED);
     }
 
+    // MELHORIA DE PERFORMANCE: Paginação implementada
     @GetMapping
-    public ResponseEntity<List<GoalResponseDTO>> getMyGoals(
-            @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Page<GoalResponseDTO>> getMyGoals(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(page = 0, size = 10, sort = "deadline", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        List<Goal> goals = goalService.getMyGoals(userDetails.getUsername());
-        List<GoalResponseDTO> response = goals.stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+        Page<Goal> goals = goalService.findAllGoals(userDetails.getUsername(), pageable);
+
+        // Converte a Page de Entity para Page de DTO
+        Page<GoalResponseDTO> response = goals.map(this::mapToResponseDTO);
 
         return ResponseEntity.ok(response);
     }
 
+    // MELHORIA DE SEGURANÇA: Passamos o userDetails para validar posse
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGoal(@PathVariable Long id) {
-        goalService.deleteGoal(id);
+    public ResponseEntity<Void> deleteGoal(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+
+        goalService.deleteGoal(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
+    }
+
+    // MELHORIA DE SEGURANÇA: Passamos o userDetails para validar posse
+    @PutMapping("/{id}/deposit")
+    public ResponseEntity<GoalResponseDTO> deposit(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id,
+            @RequestBody Map<String, BigDecimal> payload) {
+
+        BigDecimal amount = payload.get("amount");
+
+        // Passamos o email para garantir que o dono está a depositar
+        Goal updatedGoal = goalService.addAmount(id, amount, userDetails.getUsername());
+
+        return ResponseEntity.ok(mapToResponseDTO(updatedGoal));
     }
 
     private GoalResponseDTO mapToResponseDTO(Goal goal) {
         int progress = 0;
-        if (goal.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
+        // Evita divisão por zero
+        if (goal.getTargetAmount() != null && goal.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
             progress = goal.getCurrentAmount()
                     .divide(goal.getTargetAmount(), 2, RoundingMode.HALF_UP)
                     .multiply(new BigDecimal(100))
@@ -68,17 +92,7 @@ public class GoalController {
                 goal.getTargetAmount(),
                 goal.getDeadline(),
                 goal.getStatus().name(),
-                Math.min(progress, 100)
+                Math.min(progress, 100) // Garante que não passa de 100%
         );
-    }
-
-    @PutMapping("/{id}/deposit")
-    public ResponseEntity<GoalResponseDTO> deposit(
-            @PathVariable Long id,
-            @RequestBody Map<String, BigDecimal> payload) {
-
-        BigDecimal amount = payload.get("amount");
-        Goal updatedGoal = goalService.addAmount(id, amount);
-        return ResponseEntity.ok(mapToResponseDTO(updatedGoal));
     }
 }
